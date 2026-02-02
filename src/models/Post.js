@@ -2,6 +2,9 @@ const db = require("@/config/database");
 
 const Post = {
   async createTable() {
+    // - **FOREIGN KEY (user_id)**: Cột `user_id` là khóa ngoại
+    // - **REFERENCES users(id)**: Tham chiếu đến cột `id` trong bảng `users`
+    // - **ON DELETE CASCADE**: Khi xóa user → tự động xóa tất cả bài viết của user đó
     const sql = `
       CREATE TABLE IF NOT EXISTS posts (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -45,25 +48,18 @@ const Post = {
     const offset = (page - 1) * Math.min(limit, 500);
     const maxLimit = Math.min(limit, 500);
 
-    let sql, countSql;
-    let params = [];
-    let countParams = [];
+    // Xây dựng WHERE clause và params (tránh lặp code)
+    const whereClause = userId ? "WHERE user_id = ?" : "";
+    const params = userId ? [userId] : [];
 
-    if (userId) {
-      sql =
-        "SELECT * FROM posts WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?";
-      countSql = "SELECT COUNT(*) as total FROM posts WHERE user_id = ?";
-      params = [userId, maxLimit, offset];
-      countParams = [userId];
-    } else {
-      sql = "SELECT * FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?";
-      countSql = "SELECT COUNT(*) as total FROM posts";
-      params = [maxLimit, offset];
-      countParams = [];
-    }
+    // SQL cho data và count
+    const sql = `SELECT * FROM posts ${whereClause} ORDER BY created_at DESC LIMIT ${maxLimit} OFFSET ${offset}`;
+    const countSql = `SELECT COUNT(*) as total FROM posts ${whereClause}`;
 
+    // Thực thi queries
     const [rows] = await db.execute(sql, params);
-    const [countResult] = await db.execute(countSql, countParams);
+    const [countResult] = await db.execute(countSql, params);
+
     const total = countResult[0].total;
 
     const from = total > 0 ? offset + 1 : 0;

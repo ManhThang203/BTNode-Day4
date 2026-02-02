@@ -18,3 +18,6 @@ npm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Documentation (not for git)
+PAGINATION_README.md

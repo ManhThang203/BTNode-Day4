@@ -1,70 +1,68 @@
 const postService = require("@/services/postService");
 
 const postController = {
-  async getPosts(req, res) {
+  async getPosts(req, res, next) {
     try {
       const { page = 1, limit = 20, user_id } = req.query;
       const result = await postService.getPosts(page, limit, user_id);
-      res.json(result);
+      res.success(result);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      next(error);
     }
   },
 
-  async getPostById(req, res) {
+  async getPostById(req, res, next) {
     try {
       const { id } = req.params;
       const post = await postService.getPostById(id);
       if (!post) {
-        return res.status(404).json({ error: "Post not found" });
+        return res.error(404, "Post not found");
       }
-      res.json(post);
+      res.success(post);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      next(error);
     }
   },
 
-  async createPost(req, res) {
+  async createPost(req, res, next) {
     try {
       const { user_id, title, content } = req.body;
       if (!user_id || !title) {
-        return res
-          .status(400)
-          .json({ error: "user_id and title are required" });
+        return res.error(400, "user_id and title are required");
       }
       const result = await postService.createPost(user_id, title, content);
       res
         .status(201)
-        .json({ id: result.insertId, message: "Post created successfully" });
+        .success({ id: result.insertId, message: "Post created successfully" });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      next(error);
     }
   },
 
-  async updatePost(req, res) {
+  async updatePost(req, res, next) {
     try {
       const { id } = req.params;
       const { title, content } = req.body;
       const result = await postService.updatePost(id, title, content);
       if (result.affectedRows === 0) {
-        return res.status(404).json({ error: "Post not found" });
+        return res.error(404, "Post not found");
       }
-      res.json({ message: "Post updated successfully" });
+      res.success({ message: "Post updated successfully" });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      next(error);
     }
   },
 
-  async deletePost(req, res) {
+  async deletePost(req, res, next) {
     try {
       const { id } = req.params;
       const result = await postService.deletePost(id);
       if (result.affectedRows === 0) {
-        return res.status(404).json({ error: "Post not found" });
+        return res.error(404, "Post not found");
       }
-      res.json({ message: "Post deleted successfully" });
+      res.success({ message: "Post deleted successfully" });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      next(error);
     }
   },
 };
