@@ -48,22 +48,19 @@ const Post = {
     const offset = (page - 1) * Math.min(limit, 500);
     const maxLimit = Math.min(limit, 500);
 
-    // Xây dựng WHERE clause và params (tránh lặp code)
     const whereClause = userId ? "WHERE user_id = ?" : "";
     const params = userId ? [userId] : [];
 
-    // SQL cho data và count
     const sql = `SELECT * FROM posts ${whereClause} ORDER BY created_at DESC LIMIT ${maxLimit} OFFSET ${offset}`;
     const countSql = `SELECT COUNT(*) as total FROM posts ${whereClause}`;
 
-    // Thực thi queries
     const [rows] = await db.execute(sql, params);
     const [countResult] = await db.execute(countSql, params);
 
     const total = countResult[0].total;
 
-    const from = total > 0 ? offset + 1 : 0;
-    const to = Math.min(offset + maxLimit, total);
+    const from = total > 0 ? offset + 1 : null;
+    const to = total > 0 ? Math.min(offset + maxLimit, total) : null;
 
     return {
       data: rows,
